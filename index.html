@@ -67,53 +67,38 @@
             z-index: 1;
         }
 
-        /* 今天時間標籤 */
-        .date-tag {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.7);
-            padding: 4px 18px;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #222;
-            z-index: 50;
-            pointer-events: none;
-            font-weight: bold;
-            letter-spacing: 1px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        /* 🛠️ 【全新空間重構】滿版高操作性控制面板 */
+        /* 控制面板核心修正：精簡內邊距與佈局 */
         .settings-panel {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%; /* 直接撐滿整個16:9畫面，給予手機點擊最大的操作空間 */
-            background: rgba(255, 255, 255, 0.98); /* 帶有極輕微透感的優雅純白 */
+            height: 100%; 
+            background: rgba(255, 255, 255, 0.98); 
             z-index: 200; 
-            transform: translateY(100%);  /* 從下方滑出 */
-            transition: transform 0.28s cubic-bezier(0.1, 0.76, 0.55, 0.94);
-            padding: 16px 20px;
+            transform: translateY(100%);  
+            transition: transform 0.25s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+            padding: 12px 16px 16px 16px; /* 縮減邊距，爭取垂直空間 */
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         .settings-panel.open {
             transform: translateY(0); 
         }
 
-        /* 面板頭部：標題與右上角固定的收合鈕 */
+        /* 上半部元件包裝區：限制最大佔用高度 */
         .panel-header-zone {
             flex-shrink: 0;
-            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* 縮小元件之間的間距 */
+            margin-bottom: 8px;
         }
         .panel-title {
             font-size: 15px;
             font-weight: bold;
             color: #222;
-            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -122,24 +107,55 @@
             font-size: 12px;
             color: #ffffff;
             background: #ff3b30;
-            padding: 5px 14px;
-            border-radius: 20px; /* 圓角化，看起來更像原生 App 元件 */
+            padding: 4px 12px;
+            border-radius: 20px; 
             cursor: pointer;
             font-weight: bold;
             box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
         }
 
-        /* 輸入群組 */
+        /* 膠囊切換鈕高度優化 */
+        .options-group {
+            display: flex;
+            gap: 8px;
+        }
+        .option-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            background: #f0f4f8;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #4a5568;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .option-item:has(input:checked) {
+            background: #e1effe;
+            color: #1a56db;
+            border-color: #bfdbfe;
+        }
+        .option-item input {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+
+        /* 輸入框組緊湊化 */
         .input-group {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
         }
         .msg-input {
             flex: 1;
-            height: 38px;
-            border: 1px solid #bbb;
-            border-radius: 8px;
+            height: 36px; /* 適度調整為 36px，既好按又省空間 */
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
             padding: 0 12px;
             font-size: 13px;
             outline: none;
@@ -150,12 +166,12 @@
             border-color: #144b73;
         }
         .add-btn {
-            height: 38px;
+            height: 36px;
             background: #144b73;
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 0 18px;
+            border-radius: 6px;
+            padding: 0 16px;
             font-size: 13px;
             font-weight: bold;
             cursor: pointer;
@@ -164,18 +180,17 @@
             background: #ff9500;
         }
 
-        /* 功能按鈕區 */
+        /* 工具按鈕組緊湊化 */
         .tools-group {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
         }
         .tool-btn {
             flex: 1;
-            height: 36px;
+            height: 32px;
             border: none;
-            border-radius: 8px;
-            font-size: 12px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             color: white;
@@ -194,27 +209,28 @@
             100% { opacity: 1; }
         }
 
-        /* 🚀 【空間優化核心】徹底釋放空間的訊息清單 */
+        /* 🚀 終極修正：強制定義最大高度並允許內部獨立捲動，絕對不被擠出畫面 */
         .msg-list-container {
-            flex: 1; /* 佔滿剩餘的所有垂直空間 */
-            overflow-y: auto; /* 啟用完美滾動 */
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            background: #fafafa;
+            flex: 1; 
+            min-height: 80px; /* 保障至少能露出一行半的高度的安全底線 */
+            overflow-y: auto; 
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
             padding: 4px;
-            -webkit-overflow-scrolling: touch; /* 優化 iOS 滾動絲滑度 */
+            -webkit-overflow-scrolling: touch; 
         }
         .msg-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 12px; /* 加大點擊間距 */
-            font-size: 13px;
-            color: #333;
-            border-bottom: 1px solid #eee;
+            padding: 8px 12px; 
+            font-size: 12px;
+            color: #334155;
+            border-bottom: 1px solid #edf2f7;
             background: #ffffff;
             margin-bottom: 4px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
         .msg-item:last-child {
             border-bottom: none;
@@ -224,25 +240,25 @@
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
-            max-width: 70%;
+            max-width: 65%;
+            font-weight: 500;
         }
         .item-actions {
             display: flex;
-            gap: 16px; /* 加寬按鈕防呆間距 */
+            gap: 14px; 
             flex-shrink: 0;
         }
         .edit-item-btn {
-            color: #007aff;
+            color: #3b82f6;
             cursor: pointer;
             font-weight: bold;
         }
         .delete-item-btn {
-            color: #ff3b30;
+            color: #ef4444;
             cursor: pointer;
             font-weight: bold;
         }
         
-        /* 右下角圓形齒輪設定按鈕 */
         .floating-menu-btn {
             position: absolute;
             bottom: 16px;
@@ -271,9 +287,7 @@
 
 <div class="app-container">
     <div class="stage" id="stage">
-        <div class="date-tag">今天</div>
         <canvas id="beachCanvas"></canvas>
-        
         <div class="floating-menu-btn" id="floatBtn">⚙️</div>
     </div>
 
@@ -282,6 +296,15 @@
             <div class="panel-title">
                 <span>沙灘量子訊息控制中心 🐾</span>
                 <span class="close-panel-btn" id="closePanelBtn">✕ 收回</span>
+            </div>
+
+            <div class="options-group">
+                <label class="option-item">
+                    <input type="checkbox" id="showDateCheck" checked> 顯示日期與星期浪
+                </label>
+                <label class="option-item">
+                    <input type="checkbox" id="showTimeCheck" checked> 顯示當前時間浪
+                </label>
             </div>
             
             <div class="input-group">
@@ -313,25 +336,42 @@
     const genUrlBtn = document.getElementById('genUrlBtn');
     const recordBtn = document.getElementById('recordBtn');
 
-    // 解析 URL 參數
-    function getInitialMessages() {
+    const showDateCheck = document.getElementById('showDateCheck');
+    const showTimeCheck = document.getElementById('showTimeCheck');
+
+    function getInitialConfig() {
+        let config = {
+            showDate: true,
+            showTime: true,
+            messages: ["大家好", "午安", "歡迎來到白六沙灘 🌊"]
+        };
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const msgParam = urlParams.get('msg');
+            const dParam = urlParams.get('d');
+            const tParam = urlParams.get('t');
+            
             if (msgParam) {
                 const decodedData = decodeURIComponent(atob(msgParam));
                 const parsed = JSON.parse(decodedData);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                if (Array.isArray(parsed) && parsed.length > 0) config.messages = parsed;
             }
+            if (dParam === '0') config.showDate = false;
+            if (tParam === '0') config.showTime = false;
         } catch (e) {
             console.error(e);
         }
-        return ["大家好", "午安", "歡迎來到白六沙灘 🌊"];
+        return config;
     }
 
-    let quantumMessages = getInitialMessages();
+    const appConfig = getInitialConfig();
+    let quantumMessages = appConfig.messages;
+    showDateCheck.checked = appConfig.showDate;
+    showTimeCheck.checked = appConfig.showTime;
+
     let currentMsgIndex = 0; 
     let editingIndex = -1; 
+    let currentWaveState = 'msg'; 
 
     function openPanel() {
         settingsPanel.classList.add('open');
@@ -423,9 +463,11 @@
         try {
             const jsonStr = JSON.stringify(quantumMessages);
             const base64Data = btoa(encodeURIComponent(jsonStr));
-            const shareUrl = `${window.location.origin}${window.location.pathname}?msg=${base64Data}`;
+            const dVal = showDateCheck.checked ? '1' : '0';
+            const tVal = showTimeCheck.checked ? '1' : '0';
+            const shareUrl = `${window.location.origin}${window.location.pathname}?msg=${base64Data}&d=${dVal}&t=${tVal}`;
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("分享網址已複製！");
+                alert("分享網址已複製！已儲存您的時間顯示偏好。");
             }).catch(() => {
                 prompt("請手動複製網址：", shareUrl);
             });
@@ -434,12 +476,15 @@
 
     // === 自動錄影控制 ===
     let mediaRecorder = null, recordedChunks = [], isRecording = false;
-    let recordedIndices = new Set(); 
+    let hasCompletedFullLoop = false;
 
     function startAutoRecording() {
         recordedChunks = [];
-        recordedIndices.clear();
-        recordedIndices.add(currentMsgIndex);
+        hasCompletedFullLoop = false;
+        
+        currentMsgIndex = 0;
+        currentWaveState = 'msg';
+        time = Math.PI * 1.5; 
 
         const stream = canvas.captureStream(30);
         let options = { mimeType: 'video/webm;codecs=vp9' };
@@ -458,7 +503,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `beach_loop_wave_${Date.now()}.webm`;
+            a.download = `beach_quantum_loop_${Date.now()}.webm`;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { document.body.removeChild(a); }, 100);
@@ -470,7 +515,7 @@
 
         mediaRecorder.start();
         isRecording = true;
-        recordBtn.textContent = "🛑 錄製中...播完所有字即自動停止";
+        recordBtn.textContent = "🛑 錄製中...完整循環後自動停止";
         recordBtn.classList.add('recording');
         closePanel(); 
     }
@@ -494,17 +539,32 @@
     initCanvas();
 
     // === 物理波浪參數 ===
-    let time = 0;
+    let time = Math.PI * 1.5; 
     const waveSpeed = 0.015;   
     const waveBaseY = -80;     
     const waveAmplitude = 380; 
 
     let hasSwitchedThisCycle = false; 
 
+    function getFormattedDateTime() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        const dayName = weekDays[now.getDay()];
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+
+        return {
+            dateStr: `${month}/${date} ${dayName}`,
+            timeStr: `${hours}:${minutes}`
+        };
+    }
+
     function animate() {
         time += waveSpeed;
 
-        // 1. 繪製細緻沙灘底色
         let sandGrd = ctx.createLinearGradient(0, 0, 0, canvas.height);
         sandGrd.addColorStop(0, '#917c65');   
         sandGrd.addColorStop(0.4, '#bcaaa0');
@@ -512,53 +572,81 @@
         ctx.fillStyle = sandGrd;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. 計算波浪動態線
         let waveCycle = Math.sin(time); 
         let currentWaveLine = waveBaseY + (waveCycle + 1) * 0.5 * waveAmplitude;
 
         let isReceding = Math.cos(time) < 0; 
-        const textY = canvas.height * 0.65; 
+        const textY = canvas.height * 0.62; 
 
-        // 漲潮深處換字邏輯
         if (!isReceding) {
             if (currentWaveLine > textY + 60) {
                 if (!hasSwitchedThisCycle) {
-                    // ✨ 殘影優化：換字瞬間強制清理畫布快取，確保舊字陰影不外漏
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     
-                    currentMsgIndex = (currentMsgIndex + 1) % quantumMessages.length;
-                    hasSwitchedThisCycle = true; 
-
-                    if (isRecording) {
-                        recordedIndices.add(currentMsgIndex);
-                        if (recordedIndices.size >= quantumMessages.length) {
-                            setTimeout(stopAutoRecording, 1200);
+                    if (currentWaveState === 'msg') {
+                        if (currentMsgIndex < quantumMessages.length - 1) {
+                            currentMsgIndex++;
+                        } else {
+                            if (showDateCheck.checked) {
+                                currentWaveState = 'date';
+                            } else if (showTimeCheck.checked) {
+                                currentWaveState = 'time';
+                            } else {
+                                currentMsgIndex = 0;
+                                if (isRecording) hasCompletedFullLoop = true;
+                            }
                         }
+                    } 
+                    else if (currentWaveState === 'date') {
+                        if (showTimeCheck.checked) {
+                            currentWaveState = 'time';
+                        } else {
+                            currentWaveState = 'msg';
+                            currentMsgIndex = 0;
+                            if (isRecording) hasCompletedFullLoop = true;
+                        }
+                    } 
+                    else if (currentWaveState === 'time') {
+                        currentWaveState = 'msg';
+                        currentMsgIndex = 0;
+                        if (isRecording) hasCompletedFullLoop = true;
                     }
+
+                    hasSwitchedThisCycle = true; 
                 }
             }
         } else {
             if (currentWaveLine < textY - 40) {
                 hasSwitchedThisCycle = false; 
+                
+                if (isRecording && hasCompletedFullLoop && currentWaveState === 'msg' && currentMsgIndex === 0) {
+                    isRecording = false; 
+                    setTimeout(stopAutoRecording, 1000);
+                }
             }
         }
 
-        // 3. 【動態裁剪遮罩 - 文字從浪退後的底部浮現】
-        if(quantumMessages[currentMsgIndex]) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(0, currentWaveLine); 
-            ctx.lineTo(canvas.width, currentWaveLine);
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.lineTo(0, canvas.height);
-            ctx.closePath();
-            ctx.clip(); 
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, currentWaveLine); 
+        ctx.lineTo(canvas.width, currentWaveLine);
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        ctx.clip(); 
 
-            drawSandText(quantumMessages[currentMsgIndex], textY, currentWaveLine);
-            ctx.restore();
+        const dt = getFormattedDateTime();
+        
+        if (currentWaveState === 'msg' && quantumMessages[currentMsgIndex]) {
+            drawSandText(quantumMessages[currentMsgIndex], textY, currentWaveLine, 'msg');
+        } else if (currentWaveState === 'date') {
+            drawSandText(dt.dateStr, textY, currentWaveLine, 'date');
+        } else if (currentWaveState === 'time') {
+            drawSandText(dt.timeStr, textY, currentWaveLine, 'time');
         }
 
-        // 4. 【海水主體】
+        ctx.restore();
+
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -581,14 +669,12 @@
         ctx.fill();
         ctx.restore();
 
-        // 5. 【純白浪花泡沫】
         drawWhiteFoamOnFront(currentWaveLine);
 
         requestAnimationFrame(animate);
     }
 
-    // 模擬沙灘刻字
-    function drawSandText(text, y, currentWaveLine) {
+    function drawSandText(text, y, currentWaveLine, type) {
         let distance = Math.max(0, y - currentWaveLine);
         let textAlpha = Math.min(1, distance / 35); 
 
@@ -598,10 +684,13 @@
         const availableWidth = canvas.width - 80;
         
         let fontSize = 36;
-        if (text.length <= 3) {
-            fontSize = 62;  
-        } else if (text.length <= 6) {
-            fontSize = 46;
+        if (type === 'date') {
+            fontSize = 42; 
+        } else if (type === 'time') {
+            fontSize = 50; 
+        } else {
+            if (text.length <= 3) fontSize = 56;  
+            else if (text.length <= 6) fontSize = 42;
         }
 
         ctx.font = `bold ${fontSize}px 'PingFang TC', 'Microsoft JhengHei', sans-serif`;
@@ -617,7 +706,6 @@
         ctx.textBaseline = "middle";
         const x = canvas.width / 2;
 
-        // 刻紋內陰影
         ctx.fillStyle = "rgba(56, 42, 27, 0.85)";
         ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
         ctx.shadowBlur = 4;
@@ -625,7 +713,6 @@
         ctx.shadowOffsetY = 2;
         ctx.fillText(text, x, y);
 
-        // 邊緣受光反光
         ctx.shadowColor = "rgba(255, 255, 255, 0.45)";
         ctx.shadowOffsetX = -1.5;
         ctx.shadowOffsetY = -1.5;
@@ -636,7 +723,6 @@
         ctx.restore();
     }
 
-    // 浪花前緣泡沫
     function drawWhiteFoamOnFront(waveLine) {
         ctx.save();
         for (let layer = 3; layer >= 1; layer--) {
