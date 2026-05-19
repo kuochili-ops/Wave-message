@@ -22,7 +22,7 @@
             align-items: center;
         }
         
-        /* 嚴格鎖定 16:9 橫向畫面 */
+        /* 嚴格鎖定 16:9 橫向畫面舞台 */
         .app-container {
             position: relative;
             width: 100vw;
@@ -51,7 +51,7 @@
             }
         }
 
-        /* 主畫面舞台 */
+        /* 主畫面畫布區 */
         .stage {
             flex: 1;
             position: relative;
@@ -85,39 +85,34 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        /* 可收回式隱藏設定面板 */
+        /* 🛠️ 【全新空間重構】滿版高操作性控制面板 */
         .settings-panel {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            background: #ffffff;
+            height: 100%; /* 直接撐滿整個16:9畫面，給予手機點擊最大的操作空間 */
+            background: rgba(255, 255, 255, 0.98); /* 帶有極輕微透感的優雅純白 */
             z-index: 200; 
-            border-top: 3px solid #144b73;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            transform: translateY(100%); 
-            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            transform: translateY(100%);  /* 從下方滑出 */
+            transition: transform 0.28s cubic-bezier(0.1, 0.76, 0.55, 0.94);
             padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
         }
         .settings-panel.open {
             transform: translateY(0); 
         }
 
-        .panel-handle {
-            width: 40px;
-            height: 5px;
-            background: #ccc;
-            border-radius: 3px;
-            margin: -4px auto 12px auto;
-            cursor: pointer;
+        /* 面板頭部：標題與右上角固定的收合鈕 */
+        .panel-header-zone {
+            flex-shrink: 0;
+            margin-bottom: 10px;
         }
-
         .panel-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
-            color: #333;
+            color: #222;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
@@ -127,13 +122,14 @@
             font-size: 12px;
             color: #ffffff;
             background: #ff3b30;
-            padding: 3px 10px;
-            border-radius: 6px;
+            padding: 5px 14px;
+            border-radius: 20px; /* 圓角化，看起來更像原生 App 元件 */
             cursor: pointer;
             font-weight: bold;
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
         }
 
-        /* 輸入區與工具列 */
+        /* 輸入群組 */
         .input-group {
             display: flex;
             gap: 8px;
@@ -141,8 +137,8 @@
         }
         .msg-input {
             flex: 1;
-            height: 36px;
-            border: 1px solid #999;
+            height: 38px;
+            border: 1px solid #bbb;
             border-radius: 8px;
             padding: 0 12px;
             font-size: 13px;
@@ -150,13 +146,16 @@
             color: #000;
             background: #fff;
         }
+        .msg-input:focus {
+            border-color: #144b73;
+        }
         .add-btn {
-            height: 36px;
+            height: 38px;
             background: #144b73;
             color: white;
             border: none;
             border-radius: 8px;
-            padding: 0 16px;
+            padding: 0 18px;
             font-size: 13px;
             font-weight: bold;
             cursor: pointer;
@@ -169,13 +168,13 @@
         .tools-group {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .tool-btn {
             flex: 1;
-            height: 34px;
+            height: 36px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
@@ -195,36 +194,42 @@
             100% { opacity: 1; }
         }
 
-        /* 清單滾動區 */
+        /* 🚀 【空間優化核心】徹底釋放空間的訊息清單 */
         .msg-list-container {
-            max-height: 95px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #fdfdfd;
+            flex: 1; /* 佔滿剩餘的所有垂直空間 */
+            overflow-y: auto; /* 啟用完美滾動 */
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
             padding: 4px;
+            -webkit-overflow-scrolling: touch; /* 優化 iOS 滾動絲滑度 */
         }
         .msg-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 10px;
-            font-size: 12px;
+            padding: 10px 12px; /* 加大點擊間距 */
+            font-size: 13px;
             color: #333;
             border-bottom: 1px solid #eee;
+            background: #ffffff;
+            margin-bottom: 4px;
+            border-radius: 6px;
         }
         .msg-item:last-child {
             border-bottom: none;
+            margin-bottom: 0;
         }
         .item-text {
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
-            max-width: 65%;
+            max-width: 70%;
         }
         .item-actions {
             display: flex;
-            gap: 12px;
+            gap: 16px; /* 加寬按鈕防呆間距 */
+            flex-shrink: 0;
         }
         .edit-item-btn {
             color: #007aff;
@@ -237,7 +242,7 @@
             font-weight: bold;
         }
         
-        /* 右下角唯一的齒輪設定鈕 */
+        /* 右下角圓形齒輪設定按鈕 */
         .floating-menu-btn {
             position: absolute;
             bottom: 16px;
@@ -273,20 +278,21 @@
     </div>
 
     <div class="settings-panel" id="settingsPanel">
-        <div class="panel-handle" id="panelHandle"></div>
-        <div class="panel-title">
-            <span>沙灘量子訊息控制中心 🐾</span>
-            <span class="close-panel-btn" id="closePanelBtn">✕ 收回</span>
-        </div>
-        
-        <div class="input-group">
-            <input type="text" id="newMsgInput" class="msg-input" placeholder="輸入刻在沙灘上的文字..." autocomplete="off">
-            <button id="addMsgBtn" class="add-btn">加入</button>
-        </div>
+        <div class="panel-header-zone">
+            <div class="panel-title">
+                <span>沙灘量子訊息控制中心 🐾</span>
+                <span class="close-panel-btn" id="closePanelBtn">✕ 收回</span>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="newMsgInput" class="msg-input" placeholder="輸入刻在沙灘上的文字..." autocomplete="off">
+                <button id="addMsgBtn" class="add-btn">加入</button>
+            </div>
 
-        <div class="tools-group">
-            <button id="genUrlBtn" class="tool-btn btn-url">🔗 生成分享網址並複製</button>
-            <button id="recordBtn" class="tool-btn btn-record">📹 錄製完整循環影片</button>
+            <div class="tools-group">
+                <button id="genUrlBtn" class="tool-btn btn-url">🔗 生成分享網址並複製</button>
+                <button id="recordBtn" class="tool-btn btn-record">📹 錄製完整循環影片</button>
+            </div>
         </div>
 
         <div class="msg-list-container" id="msgListContainer"></div>
@@ -301,7 +307,6 @@
     const floatBtn = document.getElementById('floatBtn');
     const closePanelBtn = document.getElementById('closePanelBtn');
     const settingsPanel = document.getElementById('settingsPanel');
-    const panelHandle = document.getElementById('panelHandle');
     const newMsgInput = document.getElementById('newMsgInput');
     const addMsgBtn = document.getElementById('addMsgBtn');
     const msgListContainer = document.getElementById('msgListContainer');
@@ -328,7 +333,6 @@
     let currentMsgIndex = 0; 
     let editingIndex = -1; 
 
-    // 面板開關
     function openPanel() {
         settingsPanel.classList.add('open');
         floatBtn.style.visibility = 'hidden';
@@ -341,7 +345,6 @@
     }
     floatBtn.addEventListener('click', openPanel);
     closePanelBtn.addEventListener('click', closePanel);
-    panelHandle.addEventListener('click', closePanel);
 
     function resetInputState() {
         editingIndex = -1;
@@ -429,7 +432,7 @@
         } catch(err) { alert(err); }
     });
 
-    // === 進階自動錄影控制中心 ===
+    // === 自動錄影控制 ===
     let mediaRecorder = null, recordedChunks = [], isRecording = false;
     let recordedIndices = new Set(); 
 
@@ -490,19 +493,18 @@
     window.addEventListener('resize', initCanvas);
     initCanvas();
 
-    // === 物理運動參數優化 ===
+    // === 物理波浪參數 ===
     let time = 0;
     const waveSpeed = 0.015;   
     const waveBaseY = -80;     
     const waveAmplitude = 380; 
 
-    // 核心優化：引入狀態旗標，確保「字串索引」更換點精準發生在海水完全覆蓋文字的頂點
     let hasSwitchedThisCycle = false; 
 
     function animate() {
         time += waveSpeed;
 
-        // 1. 繪製精緻的沙灘底色
+        // 1. 繪製細緻沙灘底色
         let sandGrd = ctx.createLinearGradient(0, 0, 0, canvas.height);
         sandGrd.addColorStop(0, '#917c65');   
         sandGrd.addColorStop(0.4, '#bcaaa0');
@@ -510,46 +512,40 @@
         ctx.fillStyle = sandGrd;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. 計算主浪潮動態邊界 Y
+        // 2. 計算波浪動態線
         let waveCycle = Math.sin(time); 
         let currentWaveLine = waveBaseY + (waveCycle + 1) * 0.5 * waveAmplitude;
 
-        let isReceding = Math.cos(time) < 0; // 是否正在往回退潮
-        const textY = canvas.height * 0.65; // 文字刻在沙灘上的核心Y軸
+        let isReceding = Math.cos(time) < 0; 
+        const textY = canvas.height * 0.65; 
 
-        // === 修正關鍵：重新對齊字串更換時間軸 ===
+        // 漲潮深處換字邏輯
         if (!isReceding) {
-            // 【漲潮中】：海浪往前衝刷
             if (currentWaveLine > textY + 60) {
-                // 當海浪已經完全、徹底將整個文字區域淹沒時
                 if (!hasSwitchedThisCycle) {
-                    // 就在這個完全看不見文字的「深海覆蓋瞬間」，在後台悄悄更換成下一行訊息！
+                    // ✨ 殘影優化：換字瞬間強制清理畫布快取，確保舊字陰影不外漏
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
                     currentMsgIndex = (currentMsgIndex + 1) % quantumMessages.length;
-                    hasSwitchedThisCycle = true; // 鎖定，每波浪只換一次
+                    hasSwitchedThisCycle = true; 
 
-                    // 如果正在自動錄影中，紀錄目前完美捕捉到的新索引
                     if (isRecording) {
                         recordedIndices.add(currentMsgIndex);
                         if (recordedIndices.size >= quantumMessages.length) {
-                            // 每一行都顯示過一次後，等這波浪退完再精準自動收尾存檔
                             setTimeout(stopAutoRecording, 1200);
                         }
                     }
                 }
             }
         } else {
-            // 【退潮中】：當海浪退回到高處、準備迎來下一次漲潮時，解鎖旗標
             if (currentWaveLine < textY - 40) {
                 hasSwitchedThisCycle = false; 
             }
         }
 
-        // 3. 【物理動態遮罩渲染】
+        // 3. 【動態裁剪遮罩 - 文字從浪退後的底部浮現】
         if(quantumMessages[currentMsgIndex]) {
             ctx.save();
-            
-            // 遮罩範圍：從當前的「海浪前緣線」一直延伸到「畫布最底部」
-            // 這樣在海浪退去（線往上移動）時，字只會出現在沒有海水的沙灘區，實現底部逐漸露出的效果
             ctx.beginPath();
             ctx.moveTo(0, currentWaveLine); 
             ctx.lineTo(canvas.width, currentWaveLine);
@@ -558,13 +554,11 @@
             ctx.closePath();
             ctx.clip(); 
 
-            // 在遮罩內繪製沙灘刻字
             drawSandText(quantumMessages[currentMsgIndex], textY, currentWaveLine);
-            
             ctx.restore();
         }
 
-        // 4. 【碧藍色海水主體】
+        // 4. 【海水主體】
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -587,15 +581,14 @@
         ctx.fill();
         ctx.restore();
 
-        // 5. 【純白細緻泡沫浪花】
+        // 5. 【純白浪花泡沫】
         drawWhiteFoamOnFront(currentWaveLine);
 
         requestAnimationFrame(animate);
     }
 
-    // 模擬沙灘刻字（動態漸顯）
+    // 模擬沙灘刻字
     function drawSandText(text, y, currentWaveLine) {
-        // 優化字體淡入：根據浪潮退去的物理距離，形成柔和的泥沙水漬漸顯感
         let distance = Math.max(0, y - currentWaveLine);
         let textAlpha = Math.min(1, distance / 35); 
 
@@ -624,7 +617,7 @@
         ctx.textBaseline = "middle";
         const x = canvas.width / 2;
 
-        // 陰影凹陷
+        // 刻紋內陰影
         ctx.fillStyle = "rgba(56, 42, 27, 0.85)";
         ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
         ctx.shadowBlur = 4;
@@ -643,10 +636,9 @@
         ctx.restore();
     }
 
-    // 繪製推湧在碧藍波浪最前方邊界處的「純白色泡沫浪花」
+    // 浪花前緣泡沫
     function drawWhiteFoamOnFront(waveLine) {
         ctx.save();
-
         for (let layer = 3; layer >= 1; layer--) {
             ctx.beginPath();
             for (let x = 0; x <= canvas.width; x += 10) {
@@ -675,7 +667,6 @@
                 ctx.stroke();
             }
         }
-
         ctx.restore();
     }
 
