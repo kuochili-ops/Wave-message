@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>白六沙灘量子訊息 App</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d0d0d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 嚴格鎖定 16:9 橫向畫面，直式手機自動上下留黑邊置中 */
+        .app-container {
+            position: relative;
+            width: 100vw;
+            height: calc(100vw * 9 / 16);
+            max-width: 932px;  
+            max-height: 524px; 
+            aspect-ratio: 16 / 9;
+            background: #dfceb6;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+        }
+
+        @media (max-aspect-ratio: 16/9) {
+            .app-container {
+                width: 100vw;
+                height: calc(100vw * 9 / 16);
+            }
+        }
+        @media (min-aspect-ratio: 16/9) {
+            .app-container {
+                height: 100vh;
+                width: calc(100vh * 16 / 9);
+            }
+        }
+
+        /* 主畫面舞台 */
+        .stage {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #dfceb6;
+        }
+        #beachCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 今天時間標籤 */
+        .date-tag {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.7);
+            padding: 4px 18px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #222;
+            z-index: 50;
+            pointer-events: none;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 可收回式隱藏設定面板 */
+        .settings-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            z-index: 200; 
+            border-top: 3px solid #144b73;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            transform: translateY(100%); 
+            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            padding: 16px 20px;
+        }
+        .settings-panel.open {
+            transform: translateY(0); 
+        }
+
+        .panel-handle {
+            width: 40px;
+            height: 5px;
+            background: #ccc;
+            border-radius: 3px;
+            margin: -4px auto 12px auto;
+            cursor: pointer;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close-panel-btn {
+            font-size: 12px;
+            color: #ffffff;
+            background: #ff3b30;
+            padding: 3px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* 輸入區與工具列 */
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .msg-input {
+            flex: 1;
+            height: 36px;
+            border: 1px solid #999;
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 13px;
+            outline: none;
+            color: #000;
+            background: #fff;
+        }
+        .add-btn {
+            height: 36px;
+            background: #144b73;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 功能按鈕區 */
+        .tools-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tool-btn {
+            flex: 1;
+            height: 34px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-url { background: #34c759; }  
+        .btn-record { background: #ff9500; } 
+        .btn-record.recording { background: #ff3b30; animation: pulse 1.2s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* 清單滾動區 */
+        .msg-list-container {
+            max-height: 85px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fdfdfd;
+            padding: 4px;
+        }
+        .msg-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            font-size: 12px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+        }
+        .msg-item:last-child {
+            border-bottom: none;
+        }
+        .delete-item-btn {
+            color: #ff3b30;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-weight: bold;
+        }
+        
+        /* 右下角唯一的齒輪設定鈕 */
+        .floating-menu-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            width: 46px;
+            height: 46px;
+            background: rgba(20, 75, 115, 0.9);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 150; 
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            border: 2px solid #ffffff;
+            transition: transform 0.1s;
+        }
+        .floating-menu-btn:active {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="stage" id="stage">
+        <div class="date-tag">今天</div>
+        <canvas id="beachCanvas"></canvas>
+        
+        <div class="floating-menu-btn" id="floatBtn">⚙️</div>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div class="panel-handle" id="panelHandle"></div>
+        <div class="panel-title">
+            <span>沙灘量子訊息控制中心 🐾</span>
+            <span class="close-panel-btn" id="closePanelBtn">✕ 收回</span>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="newMsgInput" class="msg-input" placeholder="輸入刻在沙灘上的文字..." autocomplete="off">
+            <button id="addMsgBtn" class="add-btn">加入</button>
+        </div>
+
+        <div class="tools-group">
+            <button id="genUrlBtn" class="tool-btn btn-url">🔗 生成分享網址並複製</button>
+            <button id="recordBtn" class="tool-btn btn-record">📹 錄製動態影片</button>
+        </div>
+
+        <div class="msg-list-container" id="msgListContainer"></div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('beachCanvas');
+    const ctx = canvas.getContext('2d');
+    const stage = document.getElementById('stage');
+    
+    const floatBtn = document.getElementById('floatBtn');
+    const closePanelBtn = document.getElementById('closePanelBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const panelHandle = document.getElementById('panelHandle');
+    const newMsgInput = document.getElementById('newMsgInput');
+    const addMsgBtn = document.getElementById('addMsgBtn');
+    const msgListContainer = document.getElementById('msgListContainer');
+    const genUrlBtn = document.getElementById('genUrlBtn');
+    const recordBtn = document.getElementById('recordBtn');
+
+    // 解析 URL 參數
+    function getInitialMessages() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const msgParam = urlParams.get('msg');
+            if (msgParam) {
+                const decodedData = decodeURIComponent(atob(msgParam));
+                const parsed = JSON.parse(decodedData);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        return ["大家好", "午安", "歡迎來到白六沙灘 🌊"];
+    }
+
+    let quantumMessages = getInitialMessages();
+    let currentMsgIndex = 0; 
+    let textAlpha = 0;       
+
+    // 面板開關
+    function openPanel() {
+        settingsPanel.classList.add('open');
+        floatBtn.style.visibility = 'hidden';
+        renderMsgList();
+    }
+    function closePanel() {
+        settingsPanel.classList.remove('open');
+        floatBtn.style.visibility = 'visible';
+    }
+    floatBtn.addEventListener('click', openPanel);
+    closePanelBtn.addEventListener('click', closePanel);
+    panelHandle.addEventListener('click', closePanel);
+
+    function renderMsgList() {
+        msgListContainer.innerHTML = "";
+        quantumMessages.forEach((msg, index) => {
+            const item = document.createElement('div');
+            item.className = 'msg-item';
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `${index + 1}. ${msg}`;
+            
+            const delBtn = document.createElement('span');
+            delBtn.className = 'delete-item-btn';
+            delBtn.textContent = '刪除';
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(quantumMessages.length <= 1) {
+                    alert("請至少保留一條訊息！");
+                    return;
+                }
+                quantumMessages.splice(index, 1);
+                if(currentMsgIndex >= quantumMessages.length) currentMsgIndex = 0;
+                renderMsgList();
+            });
+            item.appendChild(textSpan);
+            item.appendChild(delBtn);
+            msgListContainer.appendChild(item);
+        });
+    }
+
+    function addNewMessage() {
+        const text = newMsgInput.value.trim();
+        if(!text) return;
+        quantumMessages.push(text);
+        newMsgInput.value = "";
+        renderMsgList();
+    }
+    addMsgBtn.addEventListener('click', addNewMessage);
+    newMsgInput.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') addNewMessage();
+    });
+
+    // 網址生成複製
+    genUrlBtn.addEventListener('click', () => {
+        try {
+            const jsonStr = JSON.stringify(quantumMessages);
+            const base64Data = btoa(encodeURIComponent(jsonStr));
+            const shareUrl = `${window.location.origin}${window.location.pathname}?msg=${base64Data}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert("分享網址已複製！");
+            }).catch(() => {
+                prompt("請手動複製網址：", shareUrl);
+            });
+        } catch(err) { alert(err); }
+    });
+
+    // 影片錄製
+    let mediaRecorder = null, recordedChunks = [], isRecording = false;
+    recordBtn.addEventListener('click', () => {
+        if (!isRecording) {
+            recordedChunks = [];
+            const stream = canvas.captureStream(30);
+            let options = { mimeType: 'video/webm;codecs=vp9' };
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) options = { mimeType: 'video/webm' };
+
+            try { mediaRecorder = new MediaRecorder(stream, options); } catch(e) { alert("瀏覽器不支援錄影"); return; }
+
+            mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `beach_wave_${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            recordBtn.textContent = "🛑 停止錄影並下載";
+            recordBtn.classList.add('recording');
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordBtn.textContent = "📹 錄製動態影片";
+            recordBtn.classList.remove('recording');
+        }
+    });
+
+    function initCanvas() {
+        canvas.width = stage.clientWidth;
+        canvas.height = stage.clientHeight;
+    }
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+
+    // === 物理運動參數優化 ===
+    let time = 0;
+    const waveSpeed = 0.015;   
+    const waveBaseY = -80;     // 頂部隱藏起點
+    const waveAmplitude = 380; // 衝刷覆蓋深度
+
+    let waveWasMax = false; 
+
+    function animate() {
+        time += waveSpeed;
+
+        // 1. 繪製精緻的沙灘底色（與對比圖完全相同的質感咖啡沙色漸層）
+        let sandGrd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        sandGrd.addColorStop(0, '#917c65');   
+        sandGrd.addColorStop(0.4, '#bcaaa0');
+        sandGrd.addColorStop(0.85, '#dfceb6'); 
+        ctx.fillStyle = sandGrd;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. 計算主浪潮動態邊界 Y
+        let waveCycle = Math.sin(time); 
+        let currentWaveLine = waveBaseY + (waveCycle + 1) * 0.5 * waveAmplitude;
+
+        let isReceding = Math.cos(time) < 0; 
+        const textY = canvas.height * 0.65; 
+
+        // 漲退潮字體淡入淡出與更換
+        if (!isReceding && currentWaveLine > textY + 10) {
+            textAlpha = Math.max(0, textAlpha - 0.25); 
+            waveWasMax = true; 
+        } 
+        else if (isReceding && currentWaveLine < textY - 40) {
+            if (textAlpha < 1) textAlpha += 0.03; 
+            if (waveWasMax) {
+                currentMsgIndex = (currentMsgIndex + 1) % quantumMessages.length;
+                waveWasMax = false; 
+            }
+        }
+
+        // 3. 繪製沙灘自適應刻字（字少時會放大）
+        if(quantumMessages[currentMsgIndex]) {
+            drawSandText(quantumMessages[currentMsgIndex], textY);
+        }
+
+        // 4. 【碧藍色海水主體】（對應 nano banana 充滿夏日風情的透明感碧藍）
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (let x = 0; x <= canvas.width; x += 8) {
+            let whiteNoise = Math.sin(x * 0.012 + time * 3.2) * 16
+                           + Math.cos(x * 0.025 - time * 1.8) * 10
+                           + Math.sin(x * 0.06 + time * 4.5) * 4;
+            let y = currentWaveLine + whiteNoise;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(canvas.width, 0);
+        ctx.closePath();
+
+        let seaGrd = ctx.createLinearGradient(0, 0, 0, currentWaveLine);
+        seaGrd.addColorStop(0, '#005f73');   // 深處湛藍
+        seaGrd.addColorStop(0.4, '#0a9396');  // 核心清澈翡翠碧綠
+        seaGrd.addColorStop(0.85, '#94d2bd'); // 陽光照耀下的淺透藍
+        seaGrd.addColorStop(1, '#e9d8a6');    // 拍打沙灘前緣的混沙色過渡
+        ctx.fillStyle = seaGrd;
+        ctx.fill();
+        ctx.restore();
+
+        // 5. 【純白細緻泡沫浪花：完美緊貼在波浪的最前緣】
+        drawWhiteFoamOnFront(currentWaveLine);
+
+        requestAnimationFrame(animate);
+    }
+
+    // 模擬沙灘刻字（優化字數自適應：字少時會放大！）
+    function drawSandText(text, y) {
+        if (textAlpha <= 0) return;
+
+        ctx.save();
+        ctx.globalAlpha = textAlpha;
+        
+        const availableWidth = canvas.width - 80;
+        
+        // --- 根據字數動態調整基礎大小，字少時極大化 ---
+        let fontSize = 36;
+        if (text.length <= 3) {
+            fontSize = 62;  // 「大家好」、「午安」等短文字直接放大到 62px，極具張力
+        } else if (text.length <= 6) {
+            fontSize = 46;
+        }
+
+        ctx.font = `bold ${fontSize}px 'PingFang TC', 'Microsoft JhengHei', sans-serif`;
+        
+        // 如果字串過長，進行縮小保護
+        let textMetrics = ctx.measureText(text).width;
+        if (textMetrics > availableWidth) {
+            fontSize = Math.floor((availableWidth / textMetrics) * fontSize);
+            if (fontSize < 16) fontSize = 16;
+            ctx.font = `bold ${fontSize}px 'PingFang TC', 'Microsoft JhengHei', sans-serif`;
+        }
+        
+        ctx.textAlign = "center"; 
+        ctx.textBaseline = "middle";
+        const x = canvas.width / 2;
+
+        // 第一層：陰影凹陷
+        ctx.fillStyle = "rgba(56, 42, 27, 0.85)";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.fillText(text, x, y);
+
+        // 第二層：邊緣受光反光（隆起效果）
+        ctx.shadowColor = "rgba(255, 255, 255, 0.45)";
+        ctx.shadowOffsetX = -1.5;
+        ctx.shadowOffsetY = -1.5;
+        ctx.shadowBlur = 0.5;
+        ctx.fillStyle = "rgba(75, 60, 40, 0.15)";
+        ctx.fillText(text, x, y);
+
+        ctx.restore();
+    }
+
+    // 繪製推湧在碧藍波浪最前方邊界處的「純白色泡沫浪花」
+    function drawWhiteFoamOnFront(waveLine) {
+        ctx.save();
+
+        // 3層細緻波幅疊加，呈現蓬鬆多層次的純白碎浪前緣
+        for (let layer = 3; layer >= 1; layer--) {
+            ctx.beginPath();
+            
+            for (let x = 0; x <= canvas.width; x += 10) {
+                let frontNoise = Math.sin(x * 0.022 + time * 3.5 + layer) * 15 
+                               + Math.cos(x * 0.05 - time * 2.1 + layer) * 8
+                               + Math.sin(x * 0.09 + time * 5.0) * 3;
+                
+                // 泡沫完美包裹推湧在藍浪最前端，往外突出擴散
+                let y = waveLine + (layer * 3.5) + frontNoise;
+                
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+
+            // 白色浪花前緣的粗細與透明度層次
+            if (layer === 3) {
+                ctx.lineWidth = 14;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; // 外圍半透明泡沫細霧
+                ctx.stroke();
+            } else if (layer === 2) {
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.75)"; // 核心白色綿密泡沫
+                ctx.stroke();
+            } else if (layer === 1) {
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.98)";  // 最前線明亮的主泡沫邊緣
+                ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+                ctx.shadowBlur = 8;
+                ctx.stroke();
+            }
+        }
+
+        ctx.restore();
+    }
+
+    animate();
+</script>
+
+</body>
+</html>
