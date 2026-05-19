@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>白六沙灘量子訊息 App</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css" />
+
     <style>
         * {
             box-sizing: border-box;
@@ -67,7 +70,7 @@
             z-index: 1;
         }
 
-        /* 控制面板核心修正 */
+        /* 控制面板 */
         .settings-panel {
             position: absolute;
             top: 0;
@@ -113,7 +116,7 @@
             box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
         }
 
-        /* 膠囊切換鈕高度優化 */
+        /* 選項鈕 */
         .options-group {
             display: flex;
             gap: 8px;
@@ -145,7 +148,7 @@
             height: 14px;
         }
 
-        /* 輸入框組緊湊化 */
+        /* 輸入框組 */
         .input-group {
             display: flex;
             gap: 8px;
@@ -179,7 +182,7 @@
             background: #ff9500;
         }
 
-        /* 工具按鈕組緊湊化 */
+        /* 工具鈕 */
         .tools-group {
             display: flex;
             gap: 8px;
@@ -208,7 +211,7 @@
             100% { opacity: 1; }
         }
 
-        /* 🚀 終極滑動修正：優化滾動容器，加入防截斷內襯 padding-bottom */
+        /* 滾動容器 */
         .msg-list-container {
             flex: 1; 
             min-height: 0; 
@@ -216,9 +219,9 @@
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             background: #f8fafc;
-            padding: 6px 6px 60px 6px; /* 🌟 核心防護：底部保留 60px 的超安全空白區，讓最後一行絕對能被推上來！ */
+            padding: 6px 6px 60px 6px; 
             scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch; /* 強制啟動 iOS 彈性滑動與順暢手感 */
+            -webkit-overflow-scrolling: touch; 
         }
         
         .msg-item {
@@ -280,9 +283,6 @@
             box-shadow: 0 4px 14px rgba(0,0,0,0.4);
             border: 2px solid #ffffff;
             transition: transform 0.1s;
-        }
-        .floating-menu-btn:active {
-            transform: scale(0.9);
         }
     </style>
 </head>
@@ -454,7 +454,6 @@
         } else {
             quantumMessages.push(text);
             newMsgInput.value = "";
-            // 自動滾動到底部
             setTimeout(() => {
                 msgListContainer.scrollTop = msgListContainer.scrollHeight;
             }, 50);
@@ -681,51 +680,132 @@
         requestAnimationFrame(animate);
     }
 
-    function drawSandText(text, y, currentWaveLine, type) {
-        let distance = Math.max(0, y - currentWaveLine);
-        let textAlpha = Math.min(1, distance / 35); 
+    // 🚀 最終進化排版演算法：超寬邊界 + 最小單行字體底限 + 兩行最優極大化推算
+    function drawSandText(text, targetY, currentWaveLine, type) {
+        let distance = Math.max(0, targetY - currentWaveLine);
+        let textAlpha = Math.min(1, distance / 45); 
 
         ctx.save();
         ctx.globalAlpha = textAlpha;
         
-        const availableWidth = canvas.width - 80;
-        
-        let fontSize = 36;
-        if (type === 'date') {
-            fontSize = 42; 
-        } else if (type === 'time') {
-            fontSize = 50; 
-        } else {
-            if (text.length <= 3) fontSize = 56;  
-            else if (text.length <= 6) fontSize = 42;
+        // 🌟 寬度邊界再加寬：左右各只留 12px 超窄安全邊距，讓字體儘量無限逼近顯示畫面邊緣
+        const maxLineWidth = canvas.width - 24; 
+        ctx.letterSpacing = "10px"; 
+
+        // 🌟 最小字體底限設定
+        const minSingleLineFontSize = 56; // 單行能接受的最小字體底限（小於它就強制換行）
+        let isTime = (type === 'time');
+
+        // 單純將指定字串依「特定字號下的最大寬度」切分成多行的輔助函式
+        function sliceTextIntoLines(targetText, fontSizeCheck) {
+            ctx.font = `700 ${fontSizeCheck}px 'LXGW WenKai Screen', 'BiauKai', sans-serif`;
+            let chars = Array.from(targetText);
+            let lines = [];
+            let currentLine = "";
+
+            for (let i = 0; i < chars.length; i++) {
+                let testLine = currentLine + chars[i];
+                if (ctx.measureText(testLine).width > maxLineWidth && i > 0) {
+                    lines.push(currentLine);
+                    currentLine = chars[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
         }
 
-        ctx.font = `bold ${fontSize}px 'PingFang TC', 'Microsoft JhengHei', sans-serif`;
-        
-        let textMetrics = ctx.measureText(text).width;
-        if (textMetrics > availableWidth) {
-            fontSize = Math.floor((availableWidth / textMetrics) * fontSize);
-            if (fontSize < 16) fontSize = 16;
-            ctx.font = `bold ${fontSize}px 'PingFang TC', 'Microsoft JhengHei', sans-serif`;
+        let optimalFontSize = 110; // 初始設定超巨大極限字號
+        let finalLines = [text];
+
+        if (isTime) {
+            // 時間只允許單行：直接暴力推算單行極大值，不受最低限制約束
+            while (optimalFontSize > 18) {
+                ctx.font = `700 ${optimalFontSize}px 'LXGW WenKai Screen', sans-serif`;
+                if (ctx.measureText(text).width <= maxLineWidth) break;
+                optimalFontSize -= 2;
+            }
+        } else {
+            // 普通訊息與日期：開啟「最小底限與兩行最大化推算」智慧機制
+            let foundSingleLine = false;
+
+            // 階段一：優先推算單行最大可能字號
+            while (optimalFontSize >= minSingleLineFontSize) {
+                ctx.font = `700 ${optimalFontSize}px 'LXGW WenKai Screen', sans-serif`;
+                if (ctx.measureText(text).width <= maxLineWidth) {
+                    foundSingleLine = true;
+                    break; // 成功在最小底限之上用單行裝下！
+                }
+                optimalFontSize -= 2;
+            }
+
+            // 階段二：如果縮小到最小底限（56px）依然裝不進單行，代表突破底限 -> 強制改為兩行
+            if (!foundSingleLine) {
+                // 重新從大字號（例如 85px）開始往下尋找，直到兩行能完全吞下該訊息的最大極限字體
+                optimalFontSize = 85; 
+                while (optimalFontSize > 18) {
+                    let testLines = sliceTextIntoLines(text, optimalFontSize);
+                    if (testLines.length <= 2) {
+                        finalLines = testLines; // 找到兩行排列下的最完美最大化字型
+                        break;
+                    }
+                    optimalFontSize -= 2;
+                }
+            }
         }
-        
+
+        // 設定好最終計算出的神級字級與字型樣式
+        ctx.font = `700 ${optimalFontSize}px 'LXGW WenKai Screen', 'BiauKai', '標楷體', 'KaiTi', serif`;
         ctx.textAlign = "center"; 
         ctx.textBaseline = "middle";
+        
         const x = canvas.width / 2;
+        let lineBlurSpace = optimalFontSize * 1.15; // 根據字級大小決定動態行高
 
-        ctx.fillStyle = "rgba(56, 42, 27, 0.85)";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetX = 2;
-        ctx.shadowOffsetY = 2;
-        ctx.fillText(text, x, y);
+        // 動態分配垂直多行軸心座標
+        let renderPositions = [];
+        if (finalLines.length === 1) {
+            renderPositions.push(targetY);
+        } else {
+            renderPositions.push(targetY - lineBlurSpace * 0.45);
+            renderPositions.push(targetY + lineBlurSpace * 0.45);
+        }
 
-        ctx.shadowColor = "rgba(255, 255, 255, 0.45)";
-        ctx.shadowOffsetX = -1.5;
-        ctx.shadowOffsetY = -1.5;
-        ctx.shadowBlur = 0.5;
-        ctx.fillStyle = "rgba(75, 60, 40, 0.15)";
-        ctx.fillText(text, x, y);
+        // 開始進行高仿真陰影與光影雕刻渲染
+        finalLines.forEach((lineText, index) => {
+            let y = renderPositions[index];
+
+            // 步驟 A：外擴的「乾燥沙堆地基」
+            ctx.shadowColor = "transparent";
+            ctx.fillStyle = "rgba(235, 222, 202, 0.65)"; 
+            for (let i = 0; i < 4; i++) {
+                let angle = (i * Math.PI) / 2;
+                ctx.fillText(lineText, x + Math.cos(angle) * 2.5, y + Math.sin(angle) * 2.5);
+            }
+
+            // 步驟 B：邊緣崩落的「粗糙沙礫顆粒感」
+            ctx.fillStyle = "rgba(75, 55, 35, 0.28)"; 
+            ctx.fillText(lineText, x + 1.2, y - 1.2);
+            ctx.fillStyle = "rgba(255, 250, 240, 0.45)"; 
+            ctx.fillText(lineText, x - 1.2, y + 1.2);
+
+            // 步驟 C：深層雕刻——「左上背光處的深黑色陰影」
+            ctx.shadowColor = "rgba(33, 22, 10, 0.9)"; 
+            ctx.shadowBlur = 3.5;
+            ctx.shadowOffsetX = -2.5; 
+            ctx.shadowOffsetY = -2.5;
+            ctx.fillStyle = "rgba(58, 41, 25, 0.95)"; 
+            ctx.fillText(lineText, x, y);
+
+            // 步驟 D：受光反光——「右下內凹槽迎光面的乾沙高光」
+            ctx.shadowColor = "rgba(255, 245, 230, 0.7)"; 
+            ctx.shadowBlur = 1.5;
+            ctx.shadowOffsetX = 1.5;
+            ctx.shadowOffsetY = 1.5;
+            ctx.fillStyle = "rgba(0, 0, 0, 0.01)"; 
+            ctx.fillText(lineText, x, y);
+        });
 
         ctx.restore();
     }
